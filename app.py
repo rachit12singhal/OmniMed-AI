@@ -32,16 +32,27 @@ if st.sidebar.button("🏠 Back to Landing Page", use_container_width=True):
     st.switch_page("pages/home.py")
 st.sidebar.markdown("---")
 
-# Enterprise CSS Styling Grid
+# Clean CSS Styling Grid (Supports Dark Theme & Crisp Text Visibility)
 st.markdown("""
     <style>
-    .main { background-color: #f5f7f9; }
-    .main h1, .main h2, .main h3, .main h4, .main h5, .main h6, 
-    .main p, .main span, .main label, .main li, .main ol, .main ul { color: #1E293B !important; }
+    /* Chat message text color */
     .stChatMessage [data-testid="stMarkdownContainer"] p,
-    .stChatMessage [data-testid="stMarkdownContainer"] li { color: #1E293B !important; }
-    .stChatMessage { border-radius: 12px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-    .sidebar .stButton>button { border-radius: 6px; border: 1px solid #008080; }
+    .stChatMessage [data-testid="stMarkdownContainer"] li,
+    .stChatMessage [data-testid="stMarkdownContainer"] span {
+        color: #E2E8F0 !important;
+    }
+    /* Chat message bubble container styling */
+    .stChatMessage {
+        border-radius: 12px;
+        padding: 12px;
+        background-color: #1E293B !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    /* Sidebar button styling */
+    .sidebar .stButton>button {
+        border-radius: 6px;
+        border: 1px solid #008080;
+    }
     </style>
 """, unsafe_allow_html=True)
 
