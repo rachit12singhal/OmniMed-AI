@@ -3,16 +3,18 @@ import os
 from groq import Groq
 from dotenv import load_dotenv
 from fpdf import FPDF
-# Import our new persistent database engine layers
+
+# Import persistent database engine layers
 from database import init_db, get_patient_profile, update_patient_profile, get_chat_history, save_chat_message, clear_chat_history
 
 # 1. Initialize & Seed Database File
 init_db()
 load_dotenv()
 
-api_key = os.getenv("GROQ_API_KEY")
+# Check environment variables first, then Streamlit Cloud secrets
+api_key = os.getenv("GROQ_API_KEY") or st.secrets.get("GROQ_API_KEY")
 if not api_key:
-    st.error("🔑 GROQ_API_KEY not found in your .env file. Please check your configurations.")
+    st.error("🔑 GROQ_API_KEY not found. Please add it to your .env file or Streamlit Secrets.")
     st.stop()
 
 client = Groq(api_key=api_key)
@@ -164,11 +166,9 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 if prompt := st.chat_input("Describe your current symptoms or triage concerns..."):
-    # Save the human prompt to the database permanently
+    # Save user prompt
     save_chat_message("user", prompt, patient_id=1)
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
+    
     with st.chat_message("assistant"):
         system_prompt = {
             "role": "system", 
@@ -182,21 +182,22 @@ if prompt := st.chat_input("Describe your current symptoms or triage concerns...
             )
         }
         
-        # Pull the fully updated contextual log history straight from the database
+        # Pull history from DB and clean for Groq payload
         active_history = get_chat_history(patient_id=1)
+        api_messages = [{"role": msg["role"], "content": msg["content"]} for msg in active_history]
         
         try:
             response = client.chat.completions.create(
-                messages=[system_prompt] + active_history,
+                messages=[system_prompt] + api_messages,
                 model="llama-3.3-70b-versatile",
                 temperature=0.3  
             )
             full_response = response.choices[0].message.content
             st.markdown(full_response)
             
-            # Save the AI response to the database permanently
+            # Save AI response
             save_chat_message("assistant", full_response, patient_id=1)
+            st.rerun()
+            
         except Exception as e:
             st.error(f"Execution Error dispatched from Inference Node: {e}")
-            
-    st.rerun()
